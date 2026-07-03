@@ -1,0 +1,413 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  id                     Int                   @id @default(autoincrement())
+  name                   String
+  email                  String                @unique
+  created_at             DateTime              @default(now())
+  updated_at             DateTime              @updatedAt
+  is_active              Boolean               @default(true)
+  password_hash          String?
+  phone                  String?               @unique
+  role                   UserRole              @default(USER)
+  auth_provider          AuthProvider          @default(EMAIL)
+  email_verified         Boolean               @default(false)
+  google_id              String?
+  bike_rental            BikeRental[]
+  cab_bookings           CabBooking[]
+  email_verification     EmailVerification[]
+  hotel_bookings         HotelBooking[]
+  itineraries            itinerary[]
+  password_reset         PasswordReset[]
+  self_drive_car_request SelfDriveCarRequest[]
+}
+
+model EmailVerification {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  otp_hash   String
+  expires_at DateTime
+  created_at DateTime @default(now())
+  user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("email_verification")
+}
+
+model PasswordReset {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  token_hash String
+  expires_at DateTime
+  created_at DateTime @default(now())
+  user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("password_reset")
+}
+
+model itinerary {
+  id             Int                   @id @default(autoincrement())
+  user_id        Int
+  full_name      String
+  mail_id        String
+  mobile_number  String
+  coming_from    String
+  type_of_group  String
+  adult          Int                   @default(0)
+  child          Int                   @default(0)
+  car_category   String
+  taxi_type      String
+  contact_method String
+  night_stays    Int                   @default(0)
+  rooms_required Int                   @default(1)
+  room_budget    String
+  start_date     DateTime?
+  end_date       DateTime?
+  notes          String?
+  hotels         Json?
+  taxis          Json?
+  routes         Json?
+  created_at     DateTime              @default(now())
+  updated_at     DateTime              @updatedAt
+  is_active      Boolean               @default(true)
+  status         booking_status        @default(Pending)
+  user           user                  @relation(fields: [user_id], references: [id])
+  attractions    itineraryAttraction[]
+}
+
+model itineraryAttraction {
+  id            Int        @id @default(autoincrement())
+  itinerary_id  Int
+  attraction_id String
+  created_at    DateTime   @default(now())
+  attraction    attraction @relation(fields: [attraction_id], references: [id])
+  itinerary     itinerary  @relation(fields: [itinerary_id], references: [id])
+
+  @@unique([itinerary_id, attraction_id])
+}
+
+model hotel {
+  id                    String             @id @default(uuid())
+  name                  String
+  description           String?
+  pricePerNight         Decimal            @map("price_per_night") @db.Decimal(10, 2)
+  rating                Decimal?           @default(0) @db.Decimal(4, 2)
+  distanceFromCenter    String?            @map("distance_from_center")
+  stayType              String             @map("stay_type")
+  location              String
+  isFeatured            Boolean            @default(false) @map("is_featured")
+  isActive              Boolean            @default(true) @map("is_active")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+  isHighlighted         Boolean            @default(false) @map("is_highlighted")
+  location_url          String?
+  featuredImagePublicId String?            @map("featured_image_public_id")
+  featuredImageUrl      String?            @map("featured_image_url")
+  featuredUntil         DateTime?          @map("featured_until")
+  isUniqueStays         Boolean            @default(false) @map("is_unique_stays")
+  locationRange         String             @default("Munnar") @map("location_range")
+  isVerified            Boolean            @default(false) @map("is_verified")
+  amenities             hotel_amenity[]
+  hotel_bookings        HotelBooking[]
+  experiences           hotel_experience[]
+  images                hotel_image[]
+  rules                 hotel_rule[]
+}
+
+model hotel_image {
+  id         String   @id @default(uuid())
+  url        String
+  public_id  String?
+  hotel_id   String
+  created_at DateTime @default(now())
+  is_active  Boolean  @default(true)
+  hotel      hotel    @relation(fields: [hotel_id], references: [id])
+}
+
+model hotel_amenity {
+  id        String  @id @default(uuid())
+  name      String
+  hotel_id  String
+  is_active Boolean @default(true)
+  data      String?
+  hotel     hotel   @relation(fields: [hotel_id], references: [id])
+}
+
+model hotel_experience {
+  id        String  @id @default(uuid())
+  name      String
+  hotel_id  String
+  is_active Boolean @default(true)
+  hotel     hotel   @relation(fields: [hotel_id], references: [id])
+}
+
+model hotel_rule {
+  id          String  @id @default(uuid())
+  hotel_id    String
+  key         String
+  title       String?
+  description String?
+  is_active   Boolean @default(true)
+  hotel       hotel   @relation(fields: [hotel_id], references: [id])
+
+  @@index([hotel_id])
+  @@map("hotel_rule")
+}
+
+model HotelBooking {
+  id           String         @id @default(uuid())
+  hotel_id     String
+  user_id      Int?
+  first_name   String
+  last_name    String
+  phone_number String
+  email        String
+  check_in     DateTime
+  check_out    DateTime
+  adults       Int            @default(1)
+  kids         Int            @default(0)
+  status       booking_status @default(Pending)
+  is_active    Boolean        @default(true)
+  created_at   DateTime       @default(now())
+  updated_at   DateTime       @updatedAt
+  hotel        hotel          @relation(fields: [hotel_id], references: [id])
+  user         user?          @relation(fields: [user_id], references: [id])
+
+  @@index([hotel_id])
+  @@index([user_id])
+  @@map("hotel_booking")
+}
+
+model CabBooking {
+  id               Int            @id @default(autoincrement())
+  user_id          Int
+  pickup_point     String
+  drop_point       String
+  date             DateTime
+  time             String
+  mobile_number    String
+  no_of_passengers Int
+  vehicle_type     vehicle_type
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+  is_active        Boolean        @default(true)
+  status           booking_status @default(Pending)
+  email            String?
+  name             String?
+  user             user           @relation(fields: [user_id], references: [id])
+
+  @@map("cab_booking")
+}
+
+model SelfDriveCarRequest {
+  id              Int            @id @default(autoincrement())
+  user_id         Int
+  pickup_location String
+  drop_location   String?
+  date            DateTime
+  time            String
+  mobile_number   String
+  no_of_days      Int
+  notes           String?
+  fuel_type       fuel_type
+  driver_needed   Boolean
+  car_category    vehicle_type
+  is_active       Boolean        @default(true)
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+  status          booking_status @default(Pending)
+  email           String?
+  name            String?
+  user            user           @relation(fields: [user_id], references: [id])
+
+  @@map("self_drive_car_request")
+}
+
+model BikeRental {
+  id              Int            @id @default(autoincrement())
+  user_id         Int
+  pickup_location String
+  drop_location   String?
+  date            DateTime
+  time            String
+  mobile_number   String
+  no_of_days      Int
+  notes           String?
+  fuel_type       fuel_type
+  driver_needed   Boolean
+  is_active       Boolean        @default(true)
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+  status          booking_status @default(Pending)
+  email           String?
+  name            String?
+  user            user           @relation(fields: [user_id], references: [id])
+
+  @@map("bike_rental")
+}
+
+model News {
+  id             Int       @id @default(autoincrement())
+  category       String
+  heading        String
+  detail         String
+  imageUrl       String?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  publicId       String?
+  expirationDate DateTime?
+
+  @@map("news")
+}
+
+model activity {
+  id                String            @id @default(uuid())
+  name              String
+  short_description String?
+  description       String?
+  price             Decimal?          @db.Decimal(10, 2)
+  category          String?
+  type              String?
+  address           String?
+  is_featured       Boolean           @default(false)
+  is_active         Boolean           @default(true)
+  created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  location_url      String?
+  images            activity_image[]
+  reviews           activity_review[]
+
+  @@map("activity")
+}
+
+model activity_image {
+  id          String   @id @default(uuid())
+  activity_id String
+  url         String
+  alt_text    String?
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  public_id   String?
+  activity    activity @relation(fields: [activity_id], references: [id])
+
+  @@index([activity_id])
+  @@map("activity_image")
+}
+
+model activity_review {
+  id          String   @id @default(uuid())
+  activity_id String
+  user_id     Int?
+  rating      Int
+  comment     String?
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  activity    activity @relation(fields: [activity_id], references: [id])
+
+  @@index([activity_id])
+  @@map("activity_review")
+}
+
+model BusTiming {
+  id             Int      @id @default(autoincrement())
+  departure_time String
+  arrival_time   String
+  duration       String
+  bus_type       String
+  price          Int
+  is_active      Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  from           String?
+  to             String?
+
+  @@map("bus_timing")
+}
+
+model attraction {
+  id          String                @id @default(uuid())
+  route       String
+  description String?
+  is_active   Boolean               @default(true)
+  created_at  DateTime              @default(now())
+  updated_at  DateTime              @updatedAt
+  spot_name   String
+  image_url   String?
+  public_id   String?
+  itineraries itineraryAttraction[]
+
+  @@index([route])
+  @@map("attraction")
+}
+
+model contact_form {
+  id           String         @id @default(uuid())
+  first_name   String
+  last_name    String
+  phone_number String
+  email        String
+  status       contact_status @default(Pending)
+  comments     String?
+  created_at   DateTime       @default(now())
+  updated_at   DateTime       @updatedAt
+  is_active    Boolean        @default(true)
+  notes        String?
+
+  @@map("contact_form")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+}
+
+enum vehicle_type {
+  Sedan
+  Hatchback
+  SUV
+  Van
+  Bus
+}
+
+enum fuel_type {
+  Petrol
+  Diesel
+  EV
+}
+
+enum booking_status {
+  Pending
+  Booked
+  Canceled
+}
+
+enum contact_status {
+  Pending
+  Completed
+}
+
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  hotelId   Int      @map("hotel_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // We keep this decoupled from User/Hotel to ensure it compiles instantly without validation loops
+  @@unique([userId, hotelId])
+  @@map("user_favorites")
+}
