@@ -54,6 +54,26 @@ export class NewsRepository {
     });
   }
 
+  async findExpiredNews(): Promise<News[]> {
+    const now = new Date();
+
+    return await prisma.news.findMany({
+      where: {
+        expirationDate: { not: null, lte: now },
+      },
+    });
+  }
+
+  async deleteExpiredNews(ids: number[]): Promise<number> {
+    if (ids.length === 0) return 0;
+
+    const result = await prisma.news.deleteMany({
+      where: { id: { in: ids } },
+    });
+
+    return result.count;
+  }
+
   async deleteNews(newsId: number): Promise<void> {
     // Soft delete only if active
     const result = await prisma.news.updateMany({

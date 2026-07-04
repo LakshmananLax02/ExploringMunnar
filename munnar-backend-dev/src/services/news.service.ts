@@ -2,7 +2,7 @@ import { NewsDTO } from "../dto/news.dto";
 import { NewsRepository } from "../repositories/news.repository";
 import { ApiError } from "../utils/api-error";
 import { StatusCodes } from "http-status-codes";
-import { uploadToCloudinary } from "../utils/cloudinary-upload";
+import { deleteFromCloudinary, uploadToCloudinary } from "../utils/cloudinary-upload";
 
 const newsRepo = new NewsRepository();
 
@@ -47,5 +47,29 @@ export class NewsService {
 
   async deleteNews(newsId: number) {
     return await newsRepo.deleteNews(newsId);
+  }
+
+  /**
+   * Hard-deletes news whose expirationDate has passed, cleaning up
+   * their Cloudinary images first. Called on a schedule (see src/jobs).
+   */
+  async purgeExpiredNews(): Promise<number> {
+    const expired = await newsRepo.findExpiredNews();
+    if (expired.length === 0) return 0;
+
+    for (const item of expired) {
+      if (item.publicId) {
+        try {
+          await deleteFromCloudinary(item.publicId);
+        } catch (err) {
+          console.warn(
+            `Failed to delete Cloudinary image for expired news ${item.id}:`,
+            err
+          );
+        }
+      }
+    }
+
+    return await newsRepo.deleteExpiredNews(expired.map((n) => n.id));
   }
 }

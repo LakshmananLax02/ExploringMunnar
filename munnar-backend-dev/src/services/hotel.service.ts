@@ -60,8 +60,10 @@ export class HotelService {
         locationRange: dto.locationRange, // ← NEW
         location_url: dto.locationUrl,
 
-        // Force promotion fields to default (ignore any sent values)
-        isFeatured: false,
+        // Admin can mark a hotel as promoted at creation time.
+        // Other promotion-card fields (highlight, unique stays, featured image)
+        // are still only settable via the dedicated promotions endpoint.
+        isFeatured: dto.isFeatured ?? false,
         isHighlighted: false,
         isUniqueStays: false,
         isVerified: dto.isVerified ?? false,

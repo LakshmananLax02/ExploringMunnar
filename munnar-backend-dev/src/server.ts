@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { app } from "./app";
 import { prisma } from "./prisma-client";
+import { startNewsExpiryJob } from "./jobs/news-expiry.job";
 
 const PORT = process.env.PORT || 3000;
 
@@ -11,6 +12,7 @@ const PORT = process.env.PORT || 3000;
 
     app.listen(PORT, () => {
       console.log(`🚀 Server running at http://localhost:${PORT}`);
+      startNewsExpiryJob();
     });
 
   } catch (error) {

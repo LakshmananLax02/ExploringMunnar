@@ -98,6 +98,12 @@ import { authMiddleware } from "../middlewares/auth.middleware";
 //
 import { FavoriteController } from '../controllers/favorite.controller';
 import { ToggleFavoriteDTO } from '../dto/favorite.dto';
+import {
+  createHomeSlide,
+  deleteHomeSlide,
+  getHomeSlides,
+} from "../controllers/home-slide.controller";
+import { CreateHomeSlideDto } from "../dto/home-slide.dto";
 
 const router = Router();
 const userRouter = Router();
@@ -276,9 +282,19 @@ router.post(
 );
 
 router.get(
-  '/favorites', 
-  authMiddleware, 
+  '/favorites',
+  authMiddleware,
   controller.getFavorites
 );
+
+// Homepage slider routes
+router.post(
+  "/homepage-slides",
+  upload.single("image"),
+  validateRequest(CreateHomeSlideDto),
+  createHomeSlide
+);
+router.get("/homepage-slides", getHomeSlides);
+router.delete("/homepage-slides/:id", deleteHomeSlide);
 
 export { router, userRouter };

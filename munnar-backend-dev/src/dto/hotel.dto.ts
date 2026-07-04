@@ -134,6 +134,11 @@ export class CreateHotelDto {
   @IsBoolean()
   @Transform(({ value }) => value === true || value === "true")
   isVerified?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === true || value === "true")
+  isFeatured?: boolean;
 }
 
 export class UpdateHotelDto {
