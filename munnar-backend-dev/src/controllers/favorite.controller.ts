@@ -17,14 +17,16 @@ export class FavoriteController {
   async toggleSave(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const rawUserId = req.user?.id || req.user?.userId || req.user?._id;
-      const { hotelId } = req.body;
+      const { hotelId } = req.body; // This is now your string UUID
 
       if (!rawUserId) {
         return res.status(401).json({ success: false, message: "Unauthorized auth context" });
       }
 
       const userId = parseInt(String(rawUserId), 10);
-      const targetHotelId = parseInt(String(hotelId), 10);
+      
+      // 💡 REMOVED parseInt from targetHotelId. Keep it as a pure string text value.
+      const targetHotelId = String(hotelId).trim();
 
       const result = await favoriteRepository.toggle(userId, targetHotelId);
       return res.status(200).json({ success: true, ...result });

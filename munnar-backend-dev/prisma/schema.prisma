@@ -418,7 +418,7 @@ model HomeSlide {
 model Favorite {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
-  hotelId   Int      @map("hotel_id")
+  hotelId   String   @map("hotel_id")
   createdAt DateTime @default(now()) @map("created_at")
 
   // We keep this decoupled from User/Hotel to ensure it compiles instantly without validation loops

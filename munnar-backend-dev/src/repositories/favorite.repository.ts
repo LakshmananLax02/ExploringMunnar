@@ -3,8 +3,8 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export class FavoriteRepository {
-  // Handles saving and un-saving in a single toggle transaction
-  async toggle(userId: number, hotelId: number) {
+  // 💡 Changed hotelId type signature to string
+  async toggle(userId: number, hotelId: string) {
     const existingFavorite = await prisma.favorite.findUnique({
       where: {
         userId_hotelId: { userId, hotelId }
@@ -27,7 +27,6 @@ export class FavoriteRepository {
     return { favorited: true, data: newFavorite, message: "Added to favorites" };
   }
 
-  // Gets everything saved by a specific user profile
   async getByUserId(userId: number) {
     return await prisma.favorite.findMany({
       where: { userId }
