@@ -104,13 +104,16 @@ import {
   getHomeSlides,
 } from "../controllers/home-slide.controller";
 import { CreateHomeSlideDto } from "../dto/home-slide.dto";
+import { ReviewController } from "../controllers/review.controller";
+import { CreateReviewDto } from "../dto/review.dto";
 
 const router = Router();
 const userRouter = Router();
 userRouter.use(authMiddleware);
 
-//
+//L
 const controller = new FavoriteController();
+const reviewcontroller = new ReviewController();
 
 // Health check endpoint
 router.get("/health", healthCheckController);
@@ -296,5 +299,18 @@ router.post(
 );
 router.get("/homepage-slides", getHomeSlides);
 router.delete("/homepage-slides/:id", deleteHomeSlide);
+
+
+// Public Routes
+router.get("/reviews/hotel/:hotelId", reviewcontroller.getHotelReviews);
+
+// Protected User Routes (Requires auth middleware context)
+router.post("/reviews", authMiddleware, validateRequest(CreateReviewDto), reviewcontroller.submitReview);
+
+// Admin Moderation Routes
+// router.get("/admin/reviews", authMiddleware, reviewcontroller.adminGetAllReviews);
+// router.delete("/admin/reviews/:id", authMiddleware, reviewcontroller.adminDeleteReview);
+router.get("/admin/reviews", reviewcontroller.adminGetAllReviews);
+router.delete("/admin/reviews/:id", reviewcontroller.adminDeleteReview);
 
 export { router, userRouter };

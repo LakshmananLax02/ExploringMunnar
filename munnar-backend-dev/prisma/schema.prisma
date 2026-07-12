@@ -425,3 +425,43 @@ model Favorite {
   @@unique([userId, hotelId])
   @@map("user_favorites")
 }
+
+enum ReviewStatus {
+  APPROVED
+  FLAGGED
+}
+
+model Review {
+  id             String         @id @default(uuid())
+  hotelId        String         @map("hotel_id")
+  userId         Int            @map("user_id")
+  username       String         // Cached at submission to keep text view decoupled
+  title          String
+  description    String         @db.Text
+  rating         Float          // Overall main rating (e.g. average of stars)
+  travelledMonth String         @map("travelled_month")
+  roomType       String         @map("room_type")
+  status         ReviewStatus   @default(APPROVED)
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  is_active      Boolean        @default(true) @map("is_active")
+
+  // Sub-ratings relation block
+  ratings        ReviewRatings?
+
+  @@map("hotel_reviews")
+}
+
+model ReviewRatings {
+  id           String @id @default(uuid())
+  reviewId     String @unique @map("review_id")
+  cleanliness  Float
+  food         Float
+  value        Float
+  facilities   Float
+  location     Float
+
+  review       Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@map("review_breakdown_ratings")
+}
