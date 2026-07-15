@@ -27,9 +27,12 @@ export class FavoriteRepository {
     return { favorited: true, data: newFavorite, message: "Added to favorites" };
   }
 
-  async getByUserId(userId: number) {
+ async getByUserId(userId: number) {
     return await prisma.favorite.findMany({
-      where: { userId }
+      where: { userId },
+      include: {
+        hotel: true // ◄ This fetches the entire hotel row for each favorite item
+      }
     });
   }
 }

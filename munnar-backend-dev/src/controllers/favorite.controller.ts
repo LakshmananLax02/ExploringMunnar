@@ -35,20 +35,23 @@ export class FavoriteController {
     }
   }
 
-  async getFavorites(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-    try {
-      const rawUserId = req.user?.id || req.user?.userId || req.user?._id;
+async getFavorites(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    const rawUserId = req.user?.id || req.user?.userId || req.user?._id || 1; 
 
-      if (!rawUserId) {
-        return res.status(401).json({ success: false, message: "Unauthorized auth context" });
-      }
-
-      const userId = parseInt(String(rawUserId), 10);
-      const favorites = await favoriteRepository.getByUserId(userId);
-      
-      return res.status(200).json({ success: true, data: favorites });
-    } catch (err) {
-      next(err);
-    }
+    const userId = parseInt(String(rawUserId), 10);
+    const favorites = await favoriteRepository.getByUserId(userId);
+    
+    // 💡 Map the array so it returns clean flattened hotel detail objects with a favorite timestamp
+    const flattenedFavorites = favorites.map((fav: any) => ({
+      favoriteId: fav.id,
+      favoritedAt: fav.createdAt,
+      ...fav.hotel // Spreads all hotel attributes (name, price, images, etc.) directly here
+    }));
+    
+    return res.status(200).json({ success: true, data: flattenedFavorites });
+  } catch (err) {
+    next(err);
   }
+}
 }

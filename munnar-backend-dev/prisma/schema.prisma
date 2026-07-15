@@ -120,6 +120,7 @@ model hotel {
   experiences           hotel_experience[]
   images                hotel_image[]
   rules                 hotel_rule[]
+  favorites             Favorite[]
 }
 
 model hotel_image {
@@ -420,8 +421,8 @@ model Favorite {
   userId    Int      @map("user_id")
   hotelId   String   @map("hotel_id")
   createdAt DateTime @default(now()) @map("created_at")
+  hotel     hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
 
-  // We keep this decoupled from User/Hotel to ensure it compiles instantly without validation loops
   @@unique([userId, hotelId])
   @@map("user_favorites")
 }
